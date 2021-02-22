@@ -11,6 +11,7 @@ public class PassData : MonoBehaviour
     RenderTexture outputTexture;
 
     int circlesHandle;
+    int clearHandle;
 
     public Color clearColor = new Color();
     public Color circleColor = new Color();
@@ -31,21 +32,29 @@ public class PassData : MonoBehaviour
     private void InitShader()
     {
         circlesHandle = shader.FindKernel("Circles");
+        clearHandle = shader.FindKernel("Clear");
 
         shader.SetInt( "texResolution", texResolution);
+        shader.SetVector("clearColor", clearColor);
+        shader.SetVector("circleColor", circleColor);
+
+        // Textures need to be set per kernel handle
         shader.SetTexture( circlesHandle, "Result", outputTexture);
+        shader.SetTexture(clearHandle, "Result", outputTexture);
 
         rend.material.SetTexture("_MainTex", outputTexture);
     }
  
-    private void DispatchKernel(int count)
+    private void DispatchKernels(int count)
     {
+        shader.Dispatch(clearHandle, texResolution / 8, texResolution / 8, 1);
+        shader.SetFloat("time", Time.time);
         shader.Dispatch(circlesHandle, count, 1, 1);
     }
 
     void Update()
     {
-        DispatchKernel(1);
+        DispatchKernels(10);
     }
 }
 

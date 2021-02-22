@@ -1,13 +1,98 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
+#pragma kernel SolidRed
+#pragma kernel SolidYellow
+#pragma kernel SplitScreen
+#pragma kernel Circle
+#pragma kernel Square
+#pragma kernel Square_Optimized
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> Result;
+int texResolution;
+float4 rect;
+
+float inCircle(float2 pt, float radius)
+{
+    return (length(pt) < radius) ? 1.0 : 0.0;
+}
+
+float inSquare(float2 pt, float2 bl, float2 tr)
+{
+    if (pt.x >= bl.x && pt.x <= tr.x && pt.y >= bl.y && pt.y <= tr.y)
+        return 1.0;
+    return 0.0;
+}
+
+float inSquare_Optimized(float2 pt, float4 rect)
+{
+    float horz = step(rect.x, pt.x) - step(rect.x + rect.z, pt.x);
+    float vert = step(rect.y, pt.y) - step(rect.y + rect.w, pt.y);
+    return horz * vert;
+}
 
 [numthreads(8,8,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
+void SolidRed (uint3 id : SV_DispatchThreadID)
 {
      Result[id.xy] = float4(1.0, 0.0, 0.0, 1.0);
+}
+
+[numthreads(8,8,1)]
+void SolidYellow (uint3 id : SV_DispatchThreadID)
+{
+     Result[id.xy] = float4(1.0, 1.0, 0.0, 1.0);
+}
+
+[numthreads(8,8,1)]
+void SplitScreen (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x < texResolution/2 && id.y < texResolution/2)
+    {
+        Result[id.xy] = float4(1.0, 0.0, 0.0, 1.0);
+    }
+    else if (id.x >= texResolution/2 && id.y < texResolution/2)
+    {
+        Result[id.xy] = float4(0.0, 1.0, 0.0, 1.0);
+    }
+    else if (id.x < texResolution/2 && id.y >= texResolution/2)
+    {
+        Result[id.xy] = float4(0.0, 0.0, 1.0, 1.0);
+    }
+    else
+    {
+        Result[id.xy] = float4(1.0, 1.0, 0.0, 1.0);
+    }
+}
+
+[numthreads(8, 8, 1)]
+void Circle (uint3 id : SV_DispatchThreadID)
+{
+    //float radius = texResolution >> 2;
+    //float2 center = float2(texResolution/2, texResolution/2);
+    //float distance = pow(radius, 2) - (pow(center.x - (float)(int)id.x, 2) + pow(center.y - (float)(int)id.y, 2));
+    //float paintYellow = distance >= 0 ? 1.0 : 0.0;
+    int halfRes = texResolution >> 1;
+    float paintYellow = inCircle((float2)((int2)(id.xy - halfRes)), (float)(texResolution >> 2));
+
+    Result[id.xy] = float4(paintYellow, paintYellow, 0.0, 1.0);
+}
+
+[numthreads(8, 8, 1)]
+void Square (uint3 id : SV_DispatchThreadID)
+{
+    int halfRes = texResolution >> 1;
+    float2 sideVector = float2(texResolution >> 3, texResolution >> 3);
+    float tr = sideVector;
+    float bl = sideVector * -1;
+    float paintBlue = inSquare((float2)((int2)(id.xy - halfRes)), bl, tr);
+
+    Result[id.xy] = float4(0.0, 0.0, paintBlue, 1.0);
+}
+
+[numthreads(8, 8, 1)]
+void Square_Optimized(uint3 id: SV_DispatchThreadID)
+{
+    float paintBlue = inSquare_Optimized((float2)id.xy, rect);
+    Result[id.xy] = float4(0.0, 0.0, paintBlue, 1.0);
 }
 
