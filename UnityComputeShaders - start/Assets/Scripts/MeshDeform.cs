@@ -128,7 +128,8 @@ public class MeshDeform : MonoBehaviour
 
     void OnDestroy()
     {
-        
+        vertexBuffer.Dispose();
+        initialBuffer.Dispose();
     }
 }
 
