@@ -5,6 +5,18 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class NightVision : BaseCompletePP
 {
+    private const string cs_HorzPass = "HorzPass";
+    private const string cs_Highlight = "Highlight";
+    private const string cs_horzOutput = "horzOutput";
+    private const string cs_output = "output";
+    private const string cs_source = "source";
+    private const string cs_radius = "radius";
+    private const string cs_edgeWidth = "edgeWidth";
+    private const string cs_lines = "lines";
+    private const string cs_center = "center";
+    private const string cs_tintStrength = "tintStrength";
+    private const string cs_tintColor = "tintColor";
+
     [Range(0.0f, 100.0f)]
     public float radius = 70;
     [Range(0.0f, 1.0f)]

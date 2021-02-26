@@ -5,6 +5,17 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class BlurHighlight : BaseCompletePP
 {
+    private const string cs_HorzPass = "HorzPass";
+    private const string cs_Highlight = "Highlight";
+    private const string cs_horzOutput = "horzOutput";
+    private const string cs_output = "output";
+    private const string cs_source = "source";
+    private const string cs_radius = "radius";
+    private const string cs_edgeWidth = "edgeWidth";
+    private const string cs_shade = "shade";
+    private const string cs_center = "center";
+    private const string cs_blurRadius = "blurRadius";
+
     [Range(0, 50)]
     public int blurRadius = 20;
     [Range(0.0f, 100.0f)]
@@ -16,18 +27,25 @@ public class BlurHighlight : BaseCompletePP
     public Transform trackedObject;
 
     Vector4 center;
+    RenderTexture horzOutput = null;
+    int kernelHorzPassID;
 
     protected override void Init()
     {
         center = new Vector4();
-        kernelName = "Highlight";
+        kernelName = cs_Highlight;
         base.Init();
+        kernelHorzPassID = shader.FindKernel(cs_HorzPass);
 
     }
 
     protected override void CreateTextures()
     {
         base.CreateTextures();
+        shader.SetTexture(kernelHorzPassID, cs_source, renderedSource);
+        CreateTexture(ref horzOutput);
+        shader.SetTexture(kernelHorzPassID, cs_horzOutput, horzOutput);
+        shader.SetTexture(kernelHandle, cs_horzOutput, horzOutput);
     }
 
     private void OnValidate()
@@ -41,9 +59,10 @@ public class BlurHighlight : BaseCompletePP
     protected void SetProperties()
     {
         float rad = (radius / 100.0f) * texSize.y;
-        shader.SetFloat("radius", rad);
-        shader.SetFloat("edgeWidth", rad * softenEdge / 100.0f);
-        shader.SetFloat("shade", shade);
+        shader.SetFloat(cs_radius, rad);
+        shader.SetFloat(cs_edgeWidth, rad * softenEdge / 100.0f);
+        shader.SetFloat(cs_shade, shade);
+        shader.SetInt(cs_blurRadius, blurRadius);
     }
 
     protected override void DispatchWithSource(ref RenderTexture source, ref RenderTexture destination)
@@ -52,6 +71,7 @@ public class BlurHighlight : BaseCompletePP
 
         Graphics.Blit(source, renderedSource);
 
+        shader.Dispatch(kernelHorzPassID, groupSize.x, groupSize.y, 1);
         shader.Dispatch(kernelHandle, groupSize.x, groupSize.y, 1);
 
         Graphics.Blit(output, destination);
@@ -70,7 +90,7 @@ public class BlurHighlight : BaseCompletePP
                 Vector3 pos = thisCamera.WorldToScreenPoint(trackedObject.position);
                 center.x = pos.x;
                 center.y = pos.y;
-                shader.SetVector("center", center);
+                shader.SetVector(cs_center, center);
             }
             bool resChange = false;
             CheckResolution(out resChange);
