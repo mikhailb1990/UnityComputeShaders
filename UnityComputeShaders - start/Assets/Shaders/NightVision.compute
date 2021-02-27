@@ -10,6 +10,8 @@ float4 tintColor;
 float tintStrength;
 float time;
 
+float centerY;
+
 float random (float2 pt, float seed) {
     const float a = 12.9898;
     const float b = 78.233;
@@ -38,7 +40,7 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     finalColor = lerp(source[id.xy].rgb * 0.5, finalColor, scanLine);
 
     float2 pt = (float2)id.xy;
-    float2 center = (float2)source.Length/2;
+    float2 center = float2((float)source.Length.x/2, centerY);
     center.x -= radius * 0.7;
     float leftlens = inCircle(pt, center, radius, edgeWidth);
     center.x += radius * 1.4;

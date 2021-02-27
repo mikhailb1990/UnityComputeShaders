@@ -27,10 +27,19 @@ public class NightVision : BaseCompletePP
     [Range(50, 500)]
     public int lines = 100;
 
+    float targetY;
+    float centerY;
+
+    float speed = 5f;
+
     private void OnValidate()
     {
         if(!init)
+        {
             Init();
+            targetY = thisCamera.pixelHeight / 2f;
+            centerY = targetY;
+        }
            
         SetProperties();
     }
@@ -43,11 +52,34 @@ public class NightVision : BaseCompletePP
         shader.SetVector("tintColor", tint);
         shader.SetFloat("tintStrength", tintStrength);
         shader.SetInt("lines", lines);
+        shader.SetFloat("centerY", centerY);
     }
 
     protected override void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
         shader.SetFloat("time", Time.time);
         base.OnRenderImage(source, destination);
+    }
+
+    private void Update()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            targetY = thisCamera.ScreenToViewportPoint(Input.mousePosition).y * thisCamera.pixelHeight;
+        }
+
+        if(!Mathf.Approximately(centerY, targetY))
+        {
+            //float delta = targetY - centerY;
+
+            //centerY += delta / Mathf.Abs(delta) * speed;
+            centerY = Mathf.Lerp(centerY, targetY, Time.deltaTime * speed);
+        }
+        else
+        {
+            centerY = targetY;
+        }
+
+        shader.SetFloat("centerY", centerY);
     }
 }
