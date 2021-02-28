@@ -45,6 +45,25 @@ public class ParticleFun : MonoBehaviour
         for (int i = 0; i < particleCount; i++)
         {
             //TO DO: Initialize particle
+            Vector3 v = new Vector3();
+            v.x = Random.value * 2 - 1.0f;
+            v.y = Random.value * 2 - 1.0f;
+            v.z = Random.value * 2 - 1.0f;
+            v.Normalize();
+            v *= Random.value * 0.5f;
+
+            particleArray[i].position.x = v.x;
+            particleArray[i].position.y = v.y;
+            particleArray[i].position.z = v.z + 3;
+
+            particleArray[i].velocity.x = 0;
+            particleArray[i].velocity.y = 0;
+            particleArray[i].velocity.z = 0;
+
+            // Random.value * (max-min) + min
+            // Here value will be random between min(1) and max(6)
+            particleArray[i].life = Random.value * 5.0f + 1.0f;
+
         }
 
         // create compute buffer
