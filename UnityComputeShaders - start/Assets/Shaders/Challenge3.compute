@@ -9,12 +9,20 @@ float edgeWidth;
 float4 tintColor;
 float tintStrength;
 
+float inBand(float2 pt)
+{
+    return smoothstep(tintHeight-edgeWidth, tintHeight, pt.y);
+}
+
 [numthreads(8, 8, 1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
     float4 srcColor = source[id.xy];
-    float4 color = srcColor;
+    float4 color = lerp(srcColor, tintColor, tintStrength) * shade;
 
-    output[id.xy] = color;
+    float highlight = inBand(id.xy);
+    float4 finalColor = lerp(color, srcColor, highlight);
+    
+    output[id.xy] = finalColor;
 
 }
